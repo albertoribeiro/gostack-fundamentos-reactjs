@@ -20,22 +20,40 @@ interface FileProps {
 
 const Import: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<FileProps[]>([]);
+  const [uploadError, setUploadError] = useState('');
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
+    const data = new FormData();
 
-    // TODO
+    uploadedFiles.map(uploadedFile => {
+      data.append('file',uploadedFile.file);
+    })
 
     try {
-      // await api.post('/transactions/import', data);
+      await api.post('/transactions/import', data);
+      setUploadedFiles([]); 
     } catch (err) {
-      // console.log(err.response.error);
+      setUploadError(err.response.error);
     }
   }
 
   function submitFile(files: File[]): void {
-    // TODO
+ 
+
+    const uploadedFiles = files.map( (file:File) =>{ 
+
+      if (file.type !== 'text/csv'){
+        setUploadError('Suportd only csv files.');
+      }
+      const {name,size} = file
+      const sizeF = size.toString();
+      const fileup:FileProps = { file, name, readableSize : sizeF  } ;
+
+      return fileup;
+    });
+     
+    setUploadedFiles(uploadedFiles); 
   }
 
   return (
@@ -52,7 +70,7 @@ const Import: React.FC = () => {
               <img src={alert} alt="Alert" />
               Permitido apenas arquivos CSV
             </p>
-            <button onClick={handleUpload} type="button">
+            <button disabled={uploadedFiles.length>0}  onClick={handleUpload} type="button">
               Enviar
             </button>
           </Footer>
